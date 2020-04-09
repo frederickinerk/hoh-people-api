@@ -8,6 +8,9 @@
 
 import logging
 import json
+import datetime
+
+import jsonObject
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -33,7 +36,7 @@ def setPeepFile(context, peepFileName):
             index += 1
     
     context = setPeeps(context, data['peeps'])
-    logger.info("peep->loadPeepFIle returned a list " + str(len(data['peeps'])))
+    logger.info("mycontext->loadPeepFIle returned a list " + str(len(data['peeps'])))
 
     return context
 
@@ -48,3 +51,32 @@ def setPeeps(context, peepList):
 def getPeeps(context):
     logger.debug('mycontext.getPeeps. Return array with  ' + str(len(context['peeps'])) + ' people')
     return context['peeps'] 
+
+def setPeepObjects(context):
+    if (context is None):
+        context =  newContext()
+
+    data = jsonObject.getList("People")
+    index = 0
+    for peep in data:
+        peep['index'] = str(index)
+        index += 1
+    
+    context = setPeeps(context, data) 
+    logger.info("mycontext->setPeepObjects returned a list " + str(len(data)))
+
+    return context
+
+
+def setToday(context, dt):
+    context['today'] = dt
+    return
+
+def getToday(context):
+    ret = None
+    if 'today' in context:
+        if context['today'] != "":
+            ret = datetime.date.fromisoformat(context['today'])
+    if ret is None:  # any port in a storm
+        ret = datetime.date.today() 
+    return ret

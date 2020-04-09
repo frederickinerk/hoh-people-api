@@ -1,6 +1,6 @@
 {
     "resource": "/{proxy+}",
-    "path": "/hoh-people-api/birthdays",
+    "path": "/birthdays",
     "httpMethod": "GET",
     "headers": {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -51,10 +51,11 @@
         ]
     },
     "queryStringParameters": {
+        "date": "2020-04-09T09:32:23.378Z",
         "daysBefore": "21",
         "daysAfter":  "14",
         "allFlag": "True",
-        "generations": "-1,0,1,2,3"
+        "generations": "\"3\""
     },
     "multiValueQueryStringParameters": {
     },

@@ -41,13 +41,17 @@ def loadPeepFile(context, fileName):
 
 def isMatchedLevel(targetLevel, currentLevel):
 
-    if targetLevel.upper() == "*":      # ALL
+    if targetLevel == "*":      # ALL
         return True
     
     levelList = targetLevel.split(",")
     for level in levelList:
         if level == currentLevel:
             return True
+        # IF the target is "-2", then that means any older will match
+        if level == "-2":
+            if int(currentLevel) <= -2:
+                return True  
     return False
 
 ###
@@ -66,24 +70,24 @@ def getBirthdayList(context, level, daysUntil, daysSince, allPeeps):
 
     list = []
 
-    today = datetime.date.today()
+    today = mycontext.getToday(context)
 
-    logger.debug("peep->getBirthdayList - today is  " +  str(today))
+    logger.info("peep->getBirthdayList - today is  " +  str(today))
 
     for peep in peepList:
-        logger.debug("peep->getBirthdayList - processing peep " +  peep['firstName'])
+        logger.info("peep->getBirthdayList - processing peep " +  peep['firstName'])
         if isMatchedLevel(level, peep['level']) == False:
             # Only include if level in scope
-            logger.debug("peep->getBirthdayList - peep not matched level")
+            logger.info("peep->getBirthdayList - peep not matched level")
             continue
         
-        logger.debug("peep->getBirthdayList - peep '" + peep['firstName'] + "' is at the correct level")
+        logger.info("peep->getBirthdayList - peep '" + peep['firstName'] + "' is at the correct level")
         # Only include living
         if ('dod' in peep):
             logger.debug("peep->getBirthdayList - peep " +  peep['firstName'] + " has dod" )
-            logger.debug("peep->getBirthdayList - all peeps is " + str(allPeeps == "True") )
+            logger.debug("peep->getBirthdayList - all peeps is " + allPeeps.upper() )
 
-            if not((allPeeps == "True") and validDate(peep, "dod")):
+            if not((allPeeps.upper() == "TRUE") and validDate(peep, "dod")):
                 logger.debug("peep->getBirthdayList - peep skipped as not all peeps and valid date")
                 continue
 
@@ -169,7 +173,7 @@ def getPreferredName(peep, includeFN = False):
 
     if ('preferredName' in peep):
         if includeFN:
-            sName = peep['firstName'] + "(" + peep['preferredName'] + ")"
+            sName = peep['firstName'] + " (" + peep['preferredName'] + ")"
         else:
             sName = peep['preferredName']
 
@@ -264,7 +268,7 @@ def getParentIndex(context, peep, parentGuid):
 
     peepList = mycontext.getPeeps(context)
     for lookupPeep in peepList:
-        if lookupPeep['guid'] == peep[parentGuid]:
+        if lookupPeep['id'] == peep[parentGuid]:
             logger.debug('peep->getParentIndex FOUND parent ' + parentGuid + " its " + lookupPeep['firstName'] + " with id = " + lookupPeep['index'] + ' for ' + peep['firstName'])
             return lookupPeep['index']
 
@@ -293,7 +297,7 @@ def produceCSVList(context):
         row = {}
 
         row['index'] = peep['index']
-        row['guid'] = fieldOrDefault(peep, 'guid')
+        row['id'] = fieldOrDefault(peep, 'id')
         row['level'] = fieldOrDefault(peep, 'level')
         row['firstName'] = fieldOrDefault(peep, 'firstName')
         row['familyName'] = fieldOrDefault(peep, 'familyName')
@@ -327,7 +331,7 @@ def produceDecendentList(context, guid):
     # first dump the top level parent (find them first)
     line = ""
     for peep in peepList:
-        if peep['guid'] == guid:
+        if peep['id'] == guid:
             line = peep['firstName']
             break
     decendentLines.append(line)
@@ -353,7 +357,7 @@ def GetRelString(peepList, peep, relName, guidTag):
     relString = ""
     if guidTag in peep:
         for relPeep in peepList:
-            if peep[guidTag] == relPeep['guid']:
+            if peep[guidTag] == relPeep['id']:
                 relString = relName + " " + getPreferredName(relPeep, True) + ";"
                 break
             #relPeep = findPeep(p)
@@ -429,7 +433,7 @@ def processParentNode(peepList, peep, guid, parentGuidTag, indentLevel):
         if detailLine != "":
             line = indentString[0:indentLevel] + detailLine         
             nodeLines.append(line)
-        moreLines = processDecendentNode(peepList, peep['guid'], indentLevel + 1)
+        moreLines = processDecendentNode(peepList, peep['id'], indentLevel + 1)
         nodeLines += moreLines
         return nodeLines
 

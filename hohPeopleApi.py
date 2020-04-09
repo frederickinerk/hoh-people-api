@@ -2,6 +2,7 @@
 # 
 import json
 import logging
+import datetime
 #import os
 
 #import time
@@ -25,12 +26,35 @@ logger.info('hoh-people-api: initialisation starting. (Mar 2020)..')
 # return the query string if it exists or an empty string
 #
 def getQueryString(query, dictName, default=""):
-
-    if dictName in query:
-        return query[dictName]
-    else:
+    logger.info("hoh-people-api->getQueryString - Processing query string - " + dictName)
+    if query is None: 
+        return default
+    if not dictName in query:
         return default
 
+    if query[dictName][0] == '\"': 
+        logger.info("hoh-people-api->getQueryString - Quoted string was [" + query[dictName] + "]")
+        query[dictName] = query[dictName][1:len(query[dictName]) - 1]
+        logger.info("hoh-people-api->getQueryString - Quoted string is now [" + query[dictName] + "]")
+        return query[dictName]
+    else:
+        return query[dictName]
+
+##################################################################
+# 
+# FormatMyDate.
+# Helper function to format dates like I like them
+# return formatted function
+#  
+def FormatMyDate(entry, dictName):
+    fmtDate = ""
+    if dictName in entry:
+        if entry[dictName] != "":
+            dt = datetime.datetime.strptime(entry[dictName], "%Y-%m-%d")
+            fmtDate = dt.strftime("%d-%b-%Y")
+            if (fmtDate[0] == '0'):
+                fmtDate = fmtDate[1:len(fmtDate)]
+    return fmtDate
 
 ##################################################################
 # 
@@ -43,15 +67,18 @@ def getBirthdays(action, operation, query):
     logger.info("hoh-people-api->getBirthdays - Entry")
 
     daysBefore = getQueryString(query, "daysBefore", "28")
-    daysAfter = getQueryString(query, "daysBefore", "7")
-    allFlag = getQueryString(query, "allFlag", "allFlag")
+    daysAfter = getQueryString(query, "daysAfter", "7")
+    allFlag = getQueryString(query, "allFlag", "false")
     generations = getQueryString(query, "generations", "3")
+    today = getQueryString(query, "date", "")
 
-    logger.info("hoh-people-api->getBirthdays - daysBefore = " + daysBefore + ", daysAfter = " + daysAfter + " list =" + allFlag + " generations = " + generations )
+    logger.info("hoh-people-api->getBirthdays - daysBefore = " + daysBefore + ", daysAfter = " + daysAfter + " allFlag =" + allFlag + " generations = " + generations )
 
     # TODO THIS NEEDS TO BE WAY SMARTER
     context = None
-    context = mycontext.setPeepFile(context, '../hoh-people.json')
+    #context = mycontext.setPeepFile(context, '../hoh-people.json')
+    context = mycontext.setPeepObjects(context)
+    mycontext.setToday(context, today)
 
     list = peep.getBirthdayList(context, generations, daysBefore, daysAfter, allFlag)
 
@@ -59,16 +86,25 @@ def getBirthdays(action, operation, query):
     retList = []
     for val in list:
         entry = {}
+        entry['id'] = val['id']
         entry['daysAway'] = val['daysAway']
         entry['name'] = peep.getPreferredName(val, True)
-        if int(val['age']) > 99:    #16:
-            entry['ageAtBirthday'] = "-1"
-        else:
-            entry['ageAtBirthday'] = val['age']
+    
         if 'birthCertificateSex' in val:
             entry['birthSex'] = val['birthCertificateSex']
         else:
             entry['birthSex'] = "unknown"
+        if 'dod' in val:
+            entry['dobFmt'] = FormatMyDate(val, 'dob')
+            entry['dodFmt'] = FormatMyDate(val, 'dod')
+            entry['living'] = "False"
+        else:
+            entry['living'] = "True"
+        if int(val['age']) > 16 and entry['living'] == "True":
+            entry['ageAtBirthday'] = "-1"
+        else:
+            entry['ageAtBirthday'] = val['age']
+        
         retList.append(entry) 
 
     retJson = json.dumps(retList)
@@ -168,6 +204,6 @@ def api_handler(event, context):
 
 logger.info('hoh-people-api->load: action table loading... = ')
 actionTable = []
-actionTable.append({"resource": "/hoh-people-api/birthdays", "operation": "GET", "fn": getBirthdays})
+actionTable.append({"resource": "/birthdays", "operation": "GET", "fn": getBirthdays})
 
 logger.info('hoh-people-api->load: loaded action table - entries = ' + str(len(actionTable)))

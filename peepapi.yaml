@@ -1,0 +1,76 @@
+swagger: "2.0"
+info:
+  description: "HoH Peeps API"
+  version: "1.0.0"
+  title: "Peeps API"
+
+  contact:
+    email: "dennis@higgins.one"
+
+paths:
+  /birthdays:
+    get:
+      tags:
+        - "birthday"
+      summary: "return birthdays within a criteria"
+      description: "Returns many birthdays"
+      operationId: "birthdays"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "generations"
+          in: "query"
+          description: "list of generations to match"
+          required: false
+          type: "string"
+        - name: "daysBefore"
+          in: "query"
+          description: "days before to match for birthdays"
+          required: false
+          type: "string"          
+        - name: "daysAfter"
+          in: "query"
+          description: "days after to match for birthdays"
+          required: false
+          type: "string"          
+        - name: "allFlag"
+          in: "query"
+          description: "Return the living and the dead"
+          required: false
+          type: "string"          
+        - name: "generations"
+          in: "query"
+          description: "Generations to be returned"
+          required: false
+          type: "string"          
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/event"
+        400:
+          description: "Invalid request"
+        404:
+          description: "No birthdays found"
+definitions:
+  event:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        format: "guid"
+      daysAway:
+        type: "string"
+        description: Days either side of the "birthday"
+      name:
+        type: "string"
+        description: name of the peep, actual or preferred
+      ageAtBirthday:
+        type: "string"
+      birthSex:
+        type: "string"
+        enum:
+        - "Male"
+        - "Femaile"
+        - "Other"
+        - "Unknown"

@@ -137,6 +137,23 @@ def test1_6():
     assert(len(items) >= 0)
     return
 
+def test1_7():
+    context = None
+
+    print("Test1_7 - level -2 and older peeps")
+
+    #print("context (before) = " + str(context))
+#    context = peep.loadPeepFile(context, '../hoh-people.json')
+    context = mycontext.setPeepFile(context, '../hoh-people.json')
+    #print("context (after) = " + str(context))
+
+    items = peep.getBirthdayList(context, "-2", "183", "183", "True")
+    print("Peeps matched")
+    for item in items:
+        print("peep " + peep.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
+    assert(len(items) >= 0)
+    return
+
 
 
 
@@ -171,7 +188,7 @@ def test3_0():
     print("List has " + str(len(list)) + " peeps in it")
 
     with open('peeps.csv', mode='w', newline="") as csv_file:
-        fieldnames = ['index', 'guid', 'level', 'firstName', 'familyName', 'preferredName', 'maidenName', 'dob', 'dod', 'fatherIndex', 'motherIndex' ]
+        fieldnames = ['index', 'id', 'level', 'firstName', 'familyName', 'preferredName', 'maidenName', 'dob', 'dod', 'fatherIndex', 'motherIndex' ]
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
         writer.writeheader()
@@ -213,6 +230,7 @@ def test9_0():
 #test1_4()
 #test1_5()
 #test1_6()
+#test1_7()
 
 #test2_1()
 
