@@ -4,3 +4,5 @@ tests/y.json
 backup_peeps.py
 __pycache__
 tests/decendentssample.txt
+hoh-people-api.zip
+.gitignore

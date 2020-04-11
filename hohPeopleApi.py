@@ -56,6 +56,22 @@ def FormatMyDate(entry, dictName):
                 fmtDate = fmtDate[1:len(fmtDate)]
     return fmtDate
 
+#################################################################
+# 
+# FormatFamName.
+# Helper function to format family names like I like them
+# return formatted value (includes leading space)
+#  
+def FormatMyFamName(entry):
+    ret = ""
+    if 'familyName' in entry:
+        if entry['familyName'] != "":
+            ret += " " + entry['familyName']
+            if 'maidenName' in entry:
+                if entry['maidenName'] != "":
+                    ret += " (née " + entry['maidenName'] + ")"
+    return ret
+
 ##################################################################
 # 
 # Get Birthdays Function.
@@ -98,6 +114,7 @@ def getBirthdays(action, operation, query):
             entry['dobFmt'] = FormatMyDate(val, 'dob')
             entry['dodFmt'] = FormatMyDate(val, 'dod')
             entry['living'] = "False"
+            entry['name'] += FormatMyFamName(val)   # Return full name for the departed
         else:
             entry['living'] = "True"
         if int(val['age']) > 16 and entry['living'] == "True":

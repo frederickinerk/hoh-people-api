@@ -55,7 +55,7 @@
         "daysBefore": "21",
         "daysAfter":  "14",
         "allFlag": "True",
-        "generations": "\"3\""
+        "generations": "\"-2,-1,0,3\""
     },
     "multiValueQueryStringParameters": {
     },
