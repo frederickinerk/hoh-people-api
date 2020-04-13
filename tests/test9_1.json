@@ -1,6 +1,6 @@
 {
     "resource": "/{proxy+}",
-    "path": "/birthdays",
+    "path": "/peoples",
     "httpMethod": "GET",
     "headers": {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -51,12 +51,7 @@
         ]
     },
     "queryStringParameters": {
-        "date": "2020-04-09T09:32:23.378Z",
-        "daysBefore": "21",
-        "daysAfter":  "14",
-        "allFlag": "True",
-        "generations": "\"3\"",
-        "generationsX": "\"-2,-1,0,3\""
+        "id": ""
     },
     "multiValueQueryStringParameters": {
     },

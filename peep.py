@@ -458,3 +458,36 @@ def processDecendentNode(peepList, guid, indentLevel):
     logger.info("peep->processDecendentNode Exit (" + str(len(nodeLines)) + ")" )
 
     return nodeLines
+
+    ###
+# getPeepsList
+# Return one or a list of peeps (as a list)
+# Matches ID if specfied
+# returns a List of peeps
+###
+
+def getPeepsList(context, id):
+
+    peepList = mycontext.getPeeps(context)
+
+    logger.info("peep->getPeepsList - peepList has " +  str(len(peepList)) + " peeps in it")
+
+    theList = []
+    for peep in peepList:
+        # Check for the id first 
+        if 'id' not in peep:
+            continue    # This is bad and should not happen
+
+        if peep['id'] == id:
+            # we have the peep
+            theList.append(peep)
+            break   # one and only 1 peep
+
+        if id != "":
+            continue    # Dont build list if id is specified
+
+        theList.append(peep)
+
+    logger.info("peep->getPeepsList - returned list has " +  str(len(theList)) + " peeps in it")
+
+    return theList

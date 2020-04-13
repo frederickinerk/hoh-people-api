@@ -208,10 +208,50 @@ def test4_0():
         print(line)
     return
 
+def test5_0():
+    print("TEST5_0 - PEOPLE LIST TESTS - single peep")
+    context = None
+#    context = peep.loadPeepFile(context, '../hoh-people.json')
+    context = mycontext.setPeepFile(context, '../hoh-people.json')
+
+    peeps = peep.getPeepsList(context, "09e34f8b-3f9c-43fa-8c03-3b529c01a1aa")
+
+    print("peeps count = " + str(len(peeps)))
+    assert(len(peeps) == 1)
+
+    return
+
+
+def test5_1():
+    print("TEST5_1 - PEOPLE LIST TESTS - list of peeps")
+    context = None
+#    context = peep.loadPeepFile(context, '../hoh-people.json')
+    context = mycontext.setPeepFile(context, '../hoh-people.json')
+
+    peeps = peep.getPeepsList(context, "")
+
+    assert(len(peeps) >= 1)
+
+    print("peeps count = " + str(len(peeps)))
+
+    return
+
+def test5_2():
+    print("TEST5_0 - PEOPLE LIST TESTS - single peep not matched")
+    context = None
+#    context = peep.loadPeepFile(context, '../hoh-people.json')
+    context = mycontext.setPeepFile(context, '../hoh-people.json')
+
+    peeps = peep.getPeepsList(context, "11111111-2222-3333-8c03-3b529c01a1aa")
+
+    print("peeps count = " + str(len(peeps)))
+    assert(len(peeps) == 0)
+
+    return
+
 
 def test9_0():
-    print("TEST9_0 TEST THE API Via a file input ...")
-
+    print("TEST9_0 TEST THE Birthdays API Via a file input ...")
     fname = "test9.json"
     with open(fname) as json_data:
         testJson = json.load(json_data)
@@ -221,6 +261,20 @@ def test9_0():
     print("Returned: " + str(z))
 
     return ""
+
+def test9_1():
+    print("TEST9_0 TEST THE Peoples API Via a file input ...")
+
+    fname = "test9_1.json"
+    with open(fname) as json_data:
+        testJson = json.load(json_data)
+        json_data.close()
+    print("TEST9_1>test - Json loaded from file: " + fname + " ... length = " + str(len(str(testJson))))
+    z = hohPeopleApi.api_handler(testJson, "Hello")
+    print("Returned: " + str(z))
+
+    return ""
+
 
 
 #test1_0()
@@ -238,4 +292,9 @@ def test9_0():
 
 #test4_0()
 
-test9_0()
+#test5_0()
+#test5_1()
+#test5_2()
+
+#test9_0()
+test9_1()

@@ -18,6 +18,10 @@ paths:
       produces:
         - "application/json"
       parameters:
+        - name: "date"
+          in: "query"
+          description: "date to query - if specified. In ISO format"
+          type: "string"
         - name: "generations"
           in: "query"
           description: "list of generations to match"
@@ -64,13 +68,53 @@ definitions:
         description: Days either side of the "birthday"
       name:
         type: "string"
-        description: name of the peep, actual or preferred
+        description: name of the peep, formatted to include preferred if available.
       ageAtBirthday:
         type: "string"
+        description: return -1 if unknown or over privacy age
       birthSex:
         type: "string"
+        description: "Sex as registered on birth certificate"
         enum:
         - "Male"
-        - "Femaile"
+        - "Female"
         - "Other"
         - "Unknown"
+      dobFmt:
+        type: "string"
+        description: Formatted date of birth (only the dead)
+      dodFmt:
+        type: "string"
+        description: Formatted date of death (only the dead)
+  person:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        format: "guid"
+      firstName:
+        type: "string"
+        description: first name of the peep
+      familyName:
+        type: "string"
+        description: current family name of the person
+      maidenName:
+        type: "string"
+        description: original family name of the person
+      preferredName:
+        type: "string"
+        description: preferred name of the person if defined
+      birthSex:
+        type: "string"
+        description: "Sex as registered on birth certificate"
+        enum:
+        - "Male"
+        - "Female"
+        - "Other"
+        - "Unknown"
+      dobFmt:
+        type: "string"
+        description: Formatted date of birth (only the dead)
+      dodFmt:
+        type: "string"
+        description: Formatted date of death (only the dead)

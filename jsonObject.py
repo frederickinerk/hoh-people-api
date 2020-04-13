@@ -128,9 +128,9 @@ def getList(objType, altkey=None):
     items = None # Error
     table = dynamo.Table(tableName)
     try:
-        logger.info("jsonObject->getList - about to scan the table = " + tableName)
+        logger.debug("jsonObject->getList - about to scan the table = " + tableName)
         response = table.scan()
-        logger.info("jsonObject->getList - done scan. Have a response = " + str(response))
+        logger.debug("jsonObject->getList - done scan. Have a response = " + str(response))
         if not 'Items' in response.keys():
             # Todo Create the default object
             logger.info("jsonObject->getList - no items")

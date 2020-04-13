@@ -72,6 +72,22 @@ def setToday(context, dt):
     context['today'] = dt
     return
 
+def getTodayTESTEXCEPTIONS(context):
+    ret = None
+    if 'today' in context:
+        if context['today'] != "":
+            dt = context['today']
+            i = dt.find("T")
+            if i != -1:
+                dt = dt[0: i]
+            logger.info("mycontext->getToday make date from  - " + str(dt) )
+            ret = datetime.date.fromisoformat(dt)
+
+    if ret is None:  # any port in a storm
+        ret = datetime.date.today() 
+    logger.info("mycontext->getToday returning date - " + str(ret) )
+    return ret
+
 def getToday(context):
     ret = None
     try:
