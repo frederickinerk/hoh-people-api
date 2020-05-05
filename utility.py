@@ -9,7 +9,7 @@ from dateutil.relativedelta import relativedelta
 import argparse
 
 import mycontext
-import peep
+import peeps
 import jsonObject
 
 logger = logging.getLogger()
@@ -21,14 +21,14 @@ def fileToObjects():
     logger.debug('fileToObjects: Entry')
     print("File to Objects...")
     print("Load the file...")
-    context = peep.loadPeepFile(None, "hoh-people.json")
+    context = peeps.loadPeepFile(None, "hoh-people.json")
 
-    peeps = mycontext.getPeeps(context)
+    ps = mycontext.getPeeps(context)
     print("File had " + str(len(peeps)) + " peeps in it")
 
     count = 0
     successes = 0
-    for p in peeps:
+    for p in ps:
         count += 1
         print("Processing peep[" + str(count) + "] " + p['firstName'] + " " + p['familyName'])
 

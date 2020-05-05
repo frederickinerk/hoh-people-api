@@ -7,7 +7,7 @@ import json
 import datetime
 import csv
 
-import peep
+import peeps
 import mycontext
 import hohPeopleApi
 
@@ -25,13 +25,13 @@ def test1_0():
 
     context = mycontext.newContext()
 
-    #context = peep.loadPeepFile(context, '../hoh-people.json')
+    #context = peeps.loadPeepFile(context, '../hoh-people.json')
     context = mycontext.setPeepFile(context, '../hoh-people.json')
 
-    items = peep.getBirthdayList(context, "0", "365", "365", "True")
+    items = peeps.getBirthdayList(context, "0", "365", "365", "True")
     print("Peeps matched")
     for item in items:
-        print("peep " + peep.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
+        print("peep " + peeps.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
     assert(len(items) >= 0)
 
     return
@@ -42,14 +42,14 @@ def test1_1():
     print("Test1_1 - level 1 peeps")
 
     #print("context (before) = " + str(context))
-    #context = peep.loadPeepFile(context, '../hoh-people.json')
+    #context = peeps.loadPeepFile(context, '../hoh-people.json')
     context = mycontext.setPeepFile(context, '../hoh-people.json')
     #print("context (after) = " + str(context))
 
-    items = peep.getBirthdayList(context, "True", "345", "364", "True")
+    items = peeps.getBirthdayList(context, "True", "345", "364", "True")
     print("Peeps matched")
     for item in items:
-        print("peep " + peep.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
+        print("peep " + peeps.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
     assert(len(items) >= 0)
     return
 
@@ -59,14 +59,14 @@ def test1_2():
     print("Test1_2 - level 2 peeps")
 
     #print("context (before) = " + str(context))
-    #context = peep.loadPeepFile(context, '../hoh-people.json')
+    #context = peeps.loadPeepFile(context, '../hoh-people.json')
     context = mycontext.setPeepFile(context, '../hoh-people.json')
     #print("context (after) = " + str(context))
 
-    items = peep.getBirthdayList(context, "2", "200", "200", "True")
+    items = peeps.getBirthdayList(context, "2", "200", "200", "True")
     print("Peeps matched")
     for item in items:
-        print("peep " + peep.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
+        print("peep " + peeps.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
     assert(len(items) >= 0)
     return
 
@@ -76,14 +76,14 @@ def test1_3():
     print("Test1_3 - level 3 peeps")
 
     #print("context (before) = " + str(context))
-#    context = peep.loadPeepFile(context, '../hoh-people.json')
+#    context = peeps.loadPeepFile(context, '../hoh-people.json')
     context = mycontext.setPeepFile(context, '../hoh-people.json')
     #print("context (after) = " + str(context))
 
-    items = peep.getBirthdayList(context, "3", "180", "181", "True")
+    items = peeps.getBirthdayList(context, "3", "180", "181", "True")
     print("Peeps matched")
     for item in items:
-        print("peep " + peep.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
+        print("peep " + peeps.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
     assert(len(items) >= 0)
     return
 
@@ -93,14 +93,14 @@ def test1_4():
     print("Test1_4 - level * (ALL) peeps")
 
     #print("context (before) = " + str(context))
- #   context = peep.loadPeepFile(context, '../hoh-people.json')
+ #   context = peeps.loadPeepFile(context, '../hoh-people.json')
     context = mycontext.setPeepFile(context, '../hoh-people.json')
    #print("context (after) = " + str(context))
 
-    items = peep.getBirthdayList(context, "*", "180", "181", "True")
+    items = peeps.getBirthdayList(context, "*", "180", "181", "True")
     print("Peeps matched")
     for item in items:
-        print("peep " + peep.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
+        print("peep " + peeps.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
     assert(len(items) >= 0)
     return
 
@@ -110,14 +110,14 @@ def test1_5():
     print("Test1_5 - level 1,2  peeps, but only the living")
 
     #print("context (before) = " + str(context))
-#    context = peep.loadPeepFile(context, '../hoh-people.json')
+#    context = peeps.loadPeepFile(context, '../hoh-people.json')
     context = mycontext.setPeepFile(context, '../hoh-people.json')
     #print("context (after) = " + str(context))
 
-    items = peep.getBirthdayList(context, "1,2", "180", "181", "False")
+    items = peeps.getBirthdayList(context, "1,2", "180", "181", "False")
     print("Peeps matched")
     for item in items:
-        print("peep " + peep.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
+        print("peep " + peeps.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
     assert(len(items) >= 0)
     return
 
@@ -127,14 +127,14 @@ def test1_6():
     print("Test1_6 - level 1,2,3  peeps, but only the living")
 
     #print("context (before) = " + str(context))
-#    context = peep.loadPeepFile(context, '../hoh-people.json')
+#    context = peeps.loadPeepFile(context, '../hoh-people.json')
     context = mycontext.setPeepFile(context, '../hoh-people.json')
     #print("context (after) = " + str(context))
 
-    items = peep.getBirthdayList(context, "1,2,3", "180", "181", "False")
+    items = peeps.getBirthdayList(context, "1,2,3", "180", "181", "False")
     print("Peeps matched")
     for item in items:
-        print("peep " + peep.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
+        print("peep " + peeps.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
     assert(len(items) >= 0)
     return
 
@@ -144,14 +144,14 @@ def test1_7():
     print("Test1_7 - level -2 and older peeps")
 
     #print("context (before) = " + str(context))
-#    context = peep.loadPeepFile(context, '../hoh-people.json')
+#    context = peeps.loadPeepFile(context, '../hoh-people.json')
     context = mycontext.setPeepFile(context, '../hoh-people.json')
     #print("context (after) = " + str(context))
 
-    items = peep.getBirthdayList(context, "-2", "183", "183", "True")
+    items = peeps.getBirthdayList(context, "-2", "183", "183", "True")
     print("Peeps matched")
     for item in items:
-        print("peep " + peep.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
+        print("peep " + peeps.getPreferredName(item) + " birthday is in " + item['daysAway'] + " days")
     assert(len(items) >= 0)
     return
 
@@ -163,19 +163,19 @@ def test2_1():
     print("TEST LAST YEAR ")
     currentDate = datetime.date(2020, 2, 1)
     dob = datetime.date(1961, 12, 22)
-    cbd = peep.getClosestBirthday(currentDate, dob, "-300")
+    cbd = peeps.getClosestBirthday(currentDate, dob, "-300")
     assert(cbd.year == 2019)
 
     print("TEST NEXT YEAR ")
     currentDate = datetime.date(2020, 10, 1)
     dob = datetime.date(1961, 2, 22)
-    cbd = peep.getClosestBirthday(currentDate, dob, "200")
+    cbd = peeps.getClosestBirthday(currentDate, dob, "200")
     assert(cbd.year == 2021)
 
     print("TEST THIS YEAR ")
     currentDate = datetime.date(2020, 2, 20)
     dob = datetime.date(1961, 3, 22)
-    cbd = peep.getClosestBirthday(currentDate, dob, "100")
+    cbd = peeps.getClosestBirthday(currentDate, dob, "100")
     assert(cbd.year == 2020)
 
     return 0
@@ -183,9 +183,9 @@ def test2_1():
 def test3_0():
 
     context = None
-#    context = peep.loadPeepFile(context, '../hoh-people.json')
+#    context = peeps.loadPeepFile(context, '../hoh-people.json')
     context = mycontext.setPeepFile(context, '../hoh-people.json')
-    list = peep.produceCSVList(context)
+    list = peeps.produceCSVList(context)
     print("List has " + str(len(list)) + " peeps in it")
 
     with open('peeps.csv', mode='w', newline="") as csv_file:
@@ -201,9 +201,9 @@ def test3_0():
 def test4_0():
     print("TEST4_0 - Dump the tree")
     context = None
-#    context = peep.loadPeepFile(context, '../hoh-people.json')
+#    context = peeps.loadPeepFile(context, '../hoh-people.json')
     context = mycontext.setPeepFile(context, '../hoh-people.json')
-    lines = peep.produceDecendentList(context, "09e34f8b-3f9c-43fa-8c03-3b529c01a1aa")
+    lines = peeps.produceDecendentList(context, "09e34f8b-3f9c-43fa-8c03-3b529c01a1aa")
 
     for line in lines:
         print(line)
@@ -212,15 +212,15 @@ def test4_0():
 def test5_0():
     print("TEST5_0 - PEOPLE LIST TESTS - single peep")
     context = None
-#    context = peep.loadPeepFile(context, '../hoh-people.json')
+#    context = peeps.loadPeepFile(context, '../hoh-people.json')
     context = mycontext.setPeepFile(context, '../hoh-people.json')
     testGuid = "09e34f8b-3f9c-43fa-8c03-3b529c01a1aa"
-    peeps = peep.getPeepsList(context, testGuid)
+    p = peeps.getPeepsList(context, testGuid)
 
     print("peeps count = " + str(len(peeps)))
-    assert(len(peeps) == 1)
-    assert(peeps[0]['id'] == testGuid)
-    assert(peeps[0]['firstName'] == 'Nita')
+    assert(len(p) == 1)
+    assert(p[0]['id'] == testGuid)
+    assert(p[0]['firstName'] == 'Nita')
 
     return
 
@@ -228,27 +228,27 @@ def test5_0():
 def test5_1():
     print("TEST5_1 - PEOPLE LIST TESTS - list of peeps")
     context = None
-#    context = peep.loadPeepFile(context, '../hoh-people.json')
+#    context = peeps.loadPeepFile(context, '../hoh-people.json')
     context = mycontext.setPeepFile(context, '../hoh-people.json')
 
-    peeps = peep.getPeepsList(context, "")
+    p = peeps.getPeepsList(context, "")
 
-    assert(len(peeps) >= 1)
+    assert(len(p) >= 1)
 
-    print("peeps count = " + str(len(peeps)))
+    print("peeps count = " + str(len(p)))
 
     return
 
 def test5_2():
     print("TEST5_0 - PEOPLE LIST TESTS - single peep not matched")
     context = None
-#    context = peep.loadPeepFile(context, '../hoh-people.json')
+#    context = peeps.loadPeepFile(context, '../hoh-people.json')
     context = mycontext.setPeepFile(context, '../hoh-people.json')
 
-    peeps = peep.getPeepsList(context, "11111111-2222-3333-8c03-3b529c01a1aa")
+    p = peeps.getPeepsList(context, "11111111-2222-3333-8c03-3b529c01a1aa")
 
-    print("peeps count = " + str(len(peeps)))
-    assert(len(peeps) == 0)
+    print("peeps count = " + str(len(p)))
+    assert(len(p) == 0)
 
     return
 
@@ -261,8 +261,8 @@ def test6_0():
     p['firstName'] = "TESTFIRSTNAME"
     p['birthCertificateSex'] = 'Male'
 
-    r = peep.putPeep(context, p)
-    #r = peep.putPeep(context, p)
+    r = peeps.putPeep(context, p)
+    #r = peeps.putPeep(context, p)
     print("RESULT: " + str(r))
 
     return

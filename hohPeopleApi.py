@@ -9,7 +9,7 @@ import datetime
 #from datetime import tzinfo, timedelta, datetime, date
 
 # Related modules
-import peep
+import peeps
 import mycontext
 
 
@@ -152,7 +152,7 @@ def getBirthdays(action, operation, query):
     context = mycontext.setPeepObjects(context)
     mycontext.setToday(context, today)
 
-    list = peep.getBirthdayList(context, generations, daysBefore, daysAfter, allFlag)
+    list = peeps.getBirthdayList(context, generations, daysBefore, daysAfter, allFlag)
 
     # curate the list returned to just what we want
     retList = []
@@ -160,7 +160,7 @@ def getBirthdays(action, operation, query):
         entry = {}
         entry['id'] = val['id']
         entry['daysAway'] = val['daysAway']
-        entry['name'] = peep.getPreferredName(val, True)
+        entry['name'] = peeps.getPreferredName(val, True)
     
         if 'birthCertificateSex' in val:
             entry['birthSex'] = val['birthCertificateSex']
@@ -205,7 +205,7 @@ def getPeoples(action, operation, query):
     context = mycontext.setPeepObjects(context)
 
     logger.info("hoh-people-api->getPeoples - get the list of peeps")
-    list = peep.getPeepsList(context, id)
+    list = peeps.getPeepsList(context, id)
     logger.info("hoh-people-api->getPeoples - the list of peeps has " + str(len(list)) + " peeps in it")
 
     # curate the list returned to just what we want
