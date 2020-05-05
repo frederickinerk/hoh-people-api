@@ -105,3 +105,13 @@ def getToday(context):
         ret = datetime.date.today() 
     logger.info("mycontext->getToday returning date - " + str(ret) )
     return ret
+
+def put(p, id):
+
+    logger.info("mycontext->put Entry" )
+
+    x = jsonObject.put(p, "People", id)
+
+    logger.info("mycontext->put Exit result = " + str(x) )
+
+    return x

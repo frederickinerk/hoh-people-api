@@ -11,6 +11,7 @@ import peep
 import mycontext
 import hohPeopleApi
 
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
@@ -213,11 +214,13 @@ def test5_0():
     context = None
 #    context = peep.loadPeepFile(context, '../hoh-people.json')
     context = mycontext.setPeepFile(context, '../hoh-people.json')
-
-    peeps = peep.getPeepsList(context, "09e34f8b-3f9c-43fa-8c03-3b529c01a1aa")
+    testGuid = "09e34f8b-3f9c-43fa-8c03-3b529c01a1aa"
+    peeps = peep.getPeepsList(context, testGuid)
 
     print("peeps count = " + str(len(peeps)))
     assert(len(peeps) == 1)
+    assert(peeps[0]['id'] == testGuid)
+    assert(peeps[0]['firstName'] == 'Nita')
 
     return
 
@@ -249,6 +252,20 @@ def test5_2():
 
     return
 
+def test6_0():
+    print("TEST6_0 - PEOPLE put a *NEW* peep")
+    context = mycontext.newContext()
+
+    p = {}
+    p['familyName'] = "TESTFAMILYNAME"
+    p['firstName'] = "TESTFIRSTNAME"
+    p['birthCertificateSex'] = 'Male'
+
+    r = peep.putPeep(context, p)
+    #r = peep.putPeep(context, p)
+    print("RESULT: " + str(r))
+
+    return
 
 def test9_0():
     print("TEST9_0 TEST THE Birthdays API Via a file input ...")
@@ -259,11 +276,11 @@ def test9_0():
     print("TEST9_0>test - Json loaded from file: " + fname + " ... length = " + str(len(str(testJson))))
     z = hohPeopleApi.api_handler(testJson, "Hello")
     print("Returned: " + str(z))
-
+ 
     return ""
 
 def test9_1():
-    print("TEST9_0 TEST THE Peoples API Via a file input ...")
+    print("TEST9_1 TEST THE Peoples API Via a file input ...")
 
     fname = "test9_1.json"
     with open(fname) as json_data:
@@ -275,6 +292,24 @@ def test9_1():
 
     return ""
 
+def test9_2():
+    print("TEST9_2 TEST THE Peoples API Via a file input ...")
+
+    fname = "test9_2.json"
+    with open(fname) as json_data:
+        testJson = json.load(json_data)
+        json_data.close()
+    print("TEST9_1>test - Json loaded from file: " + fname + " ... length = " + str(len(str(testJson))))
+    z = hohPeopleApi.api_handler(testJson, "Hello")
+    print("Returned: " + str(z))
+    
+    assert(z['statusCode'] == "200")
+    body = json.loads(z['body'])
+    peep = body[0]
+    print('peep=-->'+str(peep) + '<--')
+    assert(peep['preferredName'] == "Pat")
+
+    return ""
 
 
 #test1_0()
@@ -296,5 +331,8 @@ def test9_1():
 #test5_1()
 #test5_2()
 
+test6_0()
+
 #test9_0()
-test9_1()
+#test9_1()
+#test9_2()

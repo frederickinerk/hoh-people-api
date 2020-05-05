@@ -59,6 +59,23 @@ def valIfExists(entry, dictName, defValue=""):
 
 ##################################################################
 # 
+# PrivateValIfExists.
+# Helper function to return a obscured dictionary item for the living
+# if it exists or a "not reccorded" value 
+# return value for dict
+#  
+def PrivateValIfExists(entry, dictName, private):
+    retVal = "Not Recorded"
+    if dictName in entry:
+        if entry[dictName] != "<<NOT DEFINED>>":  # Undo the placeholder
+            if private:
+                retVal = "Recorded"
+            else:
+                retVal = entry[dictName]
+    return retVal
+
+##################################################################
+# 
 # FormatMyDate.
 # Helper function to format dates like I like them
 # return formatted function
@@ -88,6 +105,28 @@ def FormatMyFamName(entry):
                 if entry['maidenName'] != "":
                     ret += " (née " + entry['maidenName'] + ")"
     return ret
+
+#################################################################
+# 
+# CalcDQScore.
+# Helper function to give a number reflecting the amount of data 
+# defined for the persion
+# return string value of the score (currently out of 5)
+# 
+def CalcDQScore(entry):
+    score = 0
+    if entry['dob'] != "Not Recorded":
+        score += 1
+    if entry['firstName'] != "Not Recorded" and entry['firstName'] != "":
+        score += 1
+    if entry['familyName'] != "Not Recorded" and entry['familyName'] != "":
+        score += 1
+    if entry['motherid'] != "Not Recorded":
+        score += 1
+    if entry['fatherid'] != "Not Recorded":
+        score += 1
+    return str(score)
+    
 
 ##################################################################
 # 
@@ -183,14 +222,15 @@ def getPeoples(action, operation, query):
         entry['preferredName'] =  valIfExists(val, 'preferredName')
     
         entry['birthSex'] = valIfExists(val, 'birthCertificateSex', "Unknown")
+        entry['living'] = 'True'
         if 'dod' in val:
-            entry['dob'] = FormatMyDate(val, 'dob')
-            entry['dod'] = FormatMyDate(val, 'dod')
-        else:
-            entry['dob'] = "Not Recorded"
-            if 'dob' in val:
-                if val['dob'] != "<<NOT DEFINED>>":
-                    entry['dob'] = "Recorded"
+            if len(val['dod']) == 10:
+                entry['living'] = 'False'
+        entry['dob'] = PrivateValIfExists(val, 'dob', entry['living'] == 'True')
+        entry['dod'] = PrivateValIfExists(val, 'dod', entry['living'] == 'True')
+        entry['motherid'] = PrivateValIfExists(val, 'motherid', entry['living'] == 'True')
+        entry['fatherid'] = PrivateValIfExists(val, 'fatherid', entry['living'] == 'True')
+        entry['dqScore'] = CalcDQScore(entry)
         retList.append(entry) 
 
     retJson = json.dumps(retList)
