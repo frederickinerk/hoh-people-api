@@ -3,6 +3,7 @@
 import json
 import logging
 import datetime
+from xmlrpc.server import resolve_dotted_attribute
 #import os
 
 #import time
@@ -11,7 +12,9 @@ import datetime
 # Related modules
 import peeps
 import mycontext
+import birthdays
 
+import MyAPIException
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -110,7 +113,7 @@ def FormatMyFamName(entry):
 # 
 # CalcDQScore.
 # Helper function to give a number reflecting the amount of data 
-# defined for the persion
+# defined for the person
 # return string value of the score (currently out of 5)
 # 
 def CalcDQScore(entry):
@@ -135,7 +138,7 @@ def CalcDQScore(entry):
 # return 0 for OK, 1 for error BLAH TODO
 # return the JSON text 
 #
-def getBirthdays(action, operation, query):
+def getBirthdays(action, operation, id, query):
     logger.info("hoh-people-api->getBirthdays - Entry")
 
     daysBefore = getQueryString(query, "daysBefore", "28")
@@ -146,13 +149,10 @@ def getBirthdays(action, operation, query):
 
     logger.info("hoh-people-api->getBirthdays - daysBefore = " + daysBefore + ", daysAfter = " + daysAfter + " allFlag =" + allFlag + " generations = " + generations )
 
-    # TODO THIS NEEDS TO BE WAY SMARTER
-    context = None
-    #context = mycontext.setPeepFile(context, '../hoh-people.json')
-    context = mycontext.setPeepObjects(context)
+    context = mycontext.getContext()
     mycontext.setToday(context, today)
 
-    list = peeps.getBirthdayList(context, generations, daysBefore, daysAfter, allFlag)
+    list = birthdays.getBirthdayList(context, generations, daysBefore, daysAfter, allFlag)
 
     # curate the list returned to just what we want
     retList = []
@@ -188,25 +188,72 @@ def getBirthdays(action, operation, query):
     logger.info("hoh-people-api->getBirthdays - Exit")
     return retJson
 
+
+##################################################################
+# 
+# Get Todays Birthdays Function.
+# Returns a string with all the birthdays for the passed date. Including "none"
+# return the JSON text 
+#
+def getTodaysBirthdays(action, operation, id, query):
+    logger.info(f'hoh-people-api->getTodaysBirthdays - Entry')
+
+    today = getQueryString(query, "date", "")
+    logger.info(f'hoh-people-api->getTodaysBirthdays for {today}')
+
+    context = mycontext.getContext()
+    mycontext.setToday(context, today)
+
+    retString = birthdays.getTodaysBirthdays(context)
+
+    retJson = json.dumps(retString)
+   
+    logger.debug(f'hoh-people-api->getTodaysBirthdays - returning: {retJson}')
+    logger.info(f'hoh-people-api->getTodaysBirthdays - Exit')
+    return retJson    
+
+##################################################################
+# 
+# Put Peoples Function.
+# Passed Data for person. Either update or create
+# return BLAH
+# return the JSON text with the new record (When 200) 
+#
+def postPeoples(action, operation, path, id, query, body):
+    logger.info("hoh-people-api->postPeoples - Entry")
+
+    context = None
+    data = json.loads(body)
+    res = peeps.putPeep(context, data)
+    retJson = json.dumps(res)
+    logger.info("hoh-people-api->postPeoples - Exit")
+    return retJson
+
 ##################################################################
 # 
 # Get Peoples Function.
-# Passed query values for BLAH
+# Passed query values for familyName and Sex
 # return 0 for OK, 1 for error BLAH TODO
 # return the JSON text 
 #
-def getPeoples(action, operation, query):
+def getPeoples(action, operation, id, query):
     logger.info("hoh-people-api->getPeoples - Entry")
 
-    id = getQueryString(query, "id", "")
-    logger.info("hoh-people-api->getPeoples - got the queryStrings - id = [" + id + "]")
-
     context = None
-    context = mycontext.setPeepObjects(context)
 
-    logger.info("hoh-people-api->getPeoples - get the list of peeps")
-    list = peeps.getPeepsList(context, id)
-    logger.info("hoh-people-api->getPeoples - the list of peeps has " + str(len(list)) + " peeps in it")
+    if id == "":
+        id = getQueryString(query, "id", "")        # TODO this should be removed. Should only come from path.
+    
+    if (id != ""):
+        # Just get the ID requested.
+        logger.info("hoh-people-api->getPeoples - got the - id = [" + id + "]")
+        list = peeps.getPeep(context, id)
+    else:
+        familyName = getQueryString(query, "familyName", "")
+        birthSex = getQueryString(query, "birthSex", "")
+        logger.info("hoh-people-api->getPeoples - got the queryStrings - familyName = [" + familyName + "] - birthSex = [" + birthSex + "]")
+        list = peeps.getPeepsList(context, familyName, birthSex)
+        logger.info("hoh-people-api->getPeoples - the list of peeps has " + str(len(list)) + " peeps in it")
 
     # curate the list returned to just what we want
     retList = []
@@ -220,17 +267,21 @@ def getPeoples(action, operation, query):
         entry['firstName'] =  valIfExists(val, 'firstName')
         entry['familyName'] =  valIfExists(val, 'familyName')
         entry['preferredName'] =  valIfExists(val, 'preferredName')
+        entry['otherNames'] =  valIfExists(val, 'otherNames')
     
         entry['birthSex'] = valIfExists(val, 'birthCertificateSex', "Unknown")
         entry['living'] = 'True'
         if 'dod' in val:
             if len(val['dod']) == 10:
                 entry['living'] = 'False'
-        entry['dob'] = PrivateValIfExists(val, 'dob', entry['living'] == 'True')
-        entry['dod'] = PrivateValIfExists(val, 'dod', entry['living'] == 'True')
-        entry['motherid'] = PrivateValIfExists(val, 'motherid', entry['living'] == 'True')
-        entry['fatherid'] = PrivateValIfExists(val, 'fatherid', entry['living'] == 'True')
+        bLiving = entry['living'] == 'True'
+        entry['maidenName'] = PrivateValIfExists(val, 'maidenName', bLiving)
+        entry['dob'] = PrivateValIfExists(val, 'dob', bLiving)
+        entry['dod'] = PrivateValIfExists(val, 'dod', bLiving)
+        entry['motherid'] = PrivateValIfExists(val, 'motherid', bLiving)
+        entry['fatherid'] = PrivateValIfExists(val, 'fatherid', bLiving)
         entry['dqScore'] = CalcDQScore(entry)
+        entry['notes'] = valIfExists(val, 'notes')
         retList.append(entry) 
 
     retJson = json.dumps(retList)
@@ -239,20 +290,32 @@ def getPeoples(action, operation, query):
     logger.info("hoh-people-api->getPeoples - Exit")
     return retJson
 
+
+##################################################################
+# 
+# preFlightCheck
+# Cors check
+#
+def preFlightCheck(action, operation, path):
+    logger.info("hoh-people-api->getPeoples - Entry - [" + str(action) + "/" + str(operation) + "/" + str(path) + "]")
+    logger.info("hoh-people-api->getPeoples - Exit")
+    return ""   # So it returns OK
+
+
 ##################################################################
 # 
 # getActionEntry
 # Return the dict corresponding to the supplied resource and operation.
 #
 def getActionEntry(resource, operation):
-    logger.info("hoh-people-api->getActionEntry: Looking for " + resource + " for operation " + operation)
+    logger.debug("hoh-people-api->getActionEntry: Looking for " + resource + " for operation " + operation)
     theDict = None
     i = 0
     for action in actionTable:
         #logger.info("Action table entry: " + str(i))
         if (action["resource"] == resource and action["operation"] == operation):
             theDict = action
-            logger.info("hoh-people-api->getActionEntry: Found a match")
+            logger.debug("hoh-people-api->getActionEntry: Found a match")
             break
         i = i + 1
 
@@ -307,14 +370,22 @@ def respondErr(operation, code, msg):
 #
 def api_handler(event, context):
 
-    logger.debug("hoh-people-api->api_handler: Received event: event = " + json.dumps(event, indent=2))
+    logger.info("hoh-people-api->api_handler: Received event: event = " + str(event))  #json.dumps(event, indent=2))
+    logger.info("hoh-people-api->api_handler: Received event: context = " + str(context))  #json.dumps(event, indent=2))
     
     try:
         operation = event['httpMethod']
-        path = event['path']
+        #path = event['path']
         query = event['queryStringParameters'] 
         body = event['body']
-        logger.info("hoh-people-api->api_handler - Operation = [" + operation + "] path = [" + path + "] query = " + str(query))
+        pathArray = event['path'].split('/')      # /xxxx/n or /xxxx
+        logger.debug("hoh-people-api->api_handler: pathArray = " + str(pathArray))
+        path = "/" + pathArray[1]       # The first item is empty because of the leading "/". Put it back to match what was passed
+        if len(pathArray) > 2:          # good API citizens getting the item from the URL not the query TODO find calls that use the ID as query
+            id = pathArray[2]   
+        else:
+            id = ""      
+        logger.info("hoh-people-api->api_handler - Operation = [" + operation + "] path = [" + path + "] id = [" + str(id) + "] query = " + str(query))
 
         action = getActionEntry(path, operation)
 
@@ -328,18 +399,25 @@ def api_handler(event, context):
         if operation == 'GET':
             logger.info("hoh-people-api->api_handler - GET OPERATION")
             get_fn = action["fn"]
-            retJson = (get_fn)(action, operation, query)
-        elif operation == 'PUT':
+            retJson = (get_fn)(action, operation, id, query)
+        elif operation == 'POST':
             logger.info("hoh-people-api->api_handler - PUT OPERATION")
-            put_fn = action["fn"]
-            retJson = put_fn(action, operation, path, query, body)
+            post_fn = action["fn"]
+            retJson = post_fn(action, operation, path, id, query, body)
+        elif operation == 'OPTIONS':
+            logger.info("hoh-people-api->api_handler - Options OPERATION")
+            chk_fn = action["fn"]
+            retJson = chk_fn(action, operation, path)
+            respondOK("POST", retJson)   # Allow POST.
         else:
             # TODO something dodgy requested
             logger.error("hoh-people-api->api_handler - XXX OPERATION: " + operation)
             return respondErr(operation, "400", "Requested operation not supported (" + operation + ")")
-
         logger.debug("hoh-people-api->api_handler - retJson = " + retJson)
-
+    except MyAPIException.MyAPIException as apiEx:
+        code = apiEx.args[0]
+        msg = apiEx.args[1]
+        return respondErr(operation, code, msg)
     except Exception as ex:
         # Something bad happend. TODO make smarter
         logger.error("hoh-people-api->api_handler - Internal excpetion: " + operation + " TRACE - " + str(ex))
@@ -355,5 +433,8 @@ logger.info('hoh-people-api->load: action table loading... = ')
 actionTable = []
 actionTable.append({"resource": "/birthdays", "operation": "GET", "fn": getBirthdays})
 actionTable.append({"resource": "/peoples", "operation": "GET", "fn": getPeoples})
+actionTable.append({"resource": "/peoples", "operation": "POST", "fn": postPeoples})
+actionTable.append({"resource": "/peoples", "operation": "OPTIONS", "fn": preFlightCheck})
+actionTable.append({"resource": "/todaysBirthdays", "operation": "GET", "fn": getTodaysBirthdays})
 
 logger.info('hoh-people-api->load: loaded action table - entries = ' + str(len(actionTable)))

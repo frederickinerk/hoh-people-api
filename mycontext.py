@@ -10,83 +10,46 @@ import logging
 import json
 import datetime
 
-import jsonObject
+import jsonObjectDynamo
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.info('mycontext: initialisation starting...')
 
+
+#######
+# CONTEXT OBJECT FOR THE PROCESSING
+# Allow either files or dynamo objects to be used.
+#######
+
 def newContext():
     logger.info('mycontext.newContext: creating default context object')
-    context =  {}
-    context['signature'] = 'mycontext'
-    return context
+    theContext = {}
+    theContext['signature'] = 'mycontext'
+    return theContext
 
+def setObjectHandler(objectHandler):
+    logger.info('mycontext.setObjectHandler')
+    context = getContext()
+    context['objHandler'] = objectHandler
+    return 
 
-def setPeepFile(context, peepFileName):
-    if (context is None):
-        context =  newContext()
-    context['peepFileName'] = peepFileName
+def getObjectHandler():
+    logger.info('mycontext.getObjectHandler')
+    context = getContext()
+    if not 'objHandler' in context:
+        context['objHandler'] = jsonObjectDynamo
+    return context['objHandler']
 
-    with open(peepFileName) as json_file:
-        data = json.load(json_file)    
-        index = 0
-        for peep in data['peeps']:
-            peep['index'] = str(index)
-            index += 1
-    
-    context = setPeeps(context, data['peeps'])
-    logger.info("mycontext->loadPeepFIle returned a list " + str(len(data['peeps'])))
+def getContext():
+    logger.debug("mycontext.getContext:  context object = " + str(theContext))
+    return theContext
 
-    return context
-
-def setPeeps(context, peepList):
-    if (context is None):
-        logger.info('mycontext.setPeeps: creating default context object')
-        context =  newContext()
-        context['signature'] = 'mycontext'
-    context['peeps'] = peepList
-    return context
-
-def getPeeps(context):
-    logger.debug('mycontext.getPeeps. Return array with  ' + str(len(context['peeps'])) + ' people')
-    return context['peeps'] 
-
-def setPeepObjects(context):
-    if (context is None):
-        context =  newContext()
-
-    data = jsonObject.getList("People")
-    index = 0
-    for peep in data:
-        peep['index'] = str(index)
-        index += 1
-    
-    context = setPeeps(context, data) 
-    logger.info("mycontext->setPeepObjects returned a list " + str(len(data)))
-
-    return context
-
-
+##
+# Allow the date to be overridden for testing and dealing with timezones
 def setToday(context, dt):
     context['today'] = dt
     return
-
-def getTodayTESTEXCEPTIONS(context):
-    ret = None
-    if 'today' in context:
-        if context['today'] != "":
-            dt = context['today']
-            i = dt.find("T")
-            if i != -1:
-                dt = dt[0: i]
-            logger.info("mycontext->getToday make date from  - " + str(dt) )
-            ret = datetime.date.fromisoformat(dt)
-
-    if ret is None:  # any port in a storm
-        ret = datetime.date.today() 
-    logger.info("mycontext->getToday returning date - " + str(ret) )
-    return ret
 
 def getToday(context):
     ret = None
@@ -106,12 +69,8 @@ def getToday(context):
     logger.info("mycontext->getToday returning date - " + str(ret) )
     return ret
 
-def put(p, id):
+###
+# Global Instance variable
+##
 
-    logger.info("mycontext->put Entry" )
-
-    x = jsonObject.put(p, "People", id)
-
-    logger.info("mycontext->put Exit result = " + str(x) )
-
-    return x
+theContext = {'signature': 'mycontext'}

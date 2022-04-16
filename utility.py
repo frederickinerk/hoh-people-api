@@ -10,39 +10,64 @@ import argparse
 
 import mycontext
 import peeps
-import jsonObject
+
+import jsonObjectFile
+import jsonObjectDynamo
 
 logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
 logger.addHandler(logging.StreamHandler())
 logger.info('utility: initialisation starting...')
 
-def fileToObjects():
-    logger.debug('fileToObjects: Entry')
-    print("File to Objects...")
-    print("Load the file...")
-    context = peeps.loadPeepFile(None, "hoh-people.json")
+# def fileToObjects():
+#     logger.debug('fileToObjects: Entry')
+#     print("File to Objects...")
+#     print("Load the file...")
 
-    ps = mycontext.getPeeps(context)
-    print("File had " + str(len(peeps)) + " peeps in it")
+#     mycontext.setObjectHandler(jsonObjectFile)
 
-    count = 0
-    successes = 0
-    for p in ps:
-        count += 1
-        print("Processing peep[" + str(count) + "] " + p['firstName'] + " " + p['familyName'])
+#     context = peeps.loadPeepFile(None, "hoh-people.json")
 
-        for k in p.keys():
-            if p[k] == "":
-                p[k] = "<<NOT DEFINED>>"
+#     ps = mycontext.getPeeps(context)
+#     print("File had " + str(len(peeps)) + " peeps in it")
 
-        x = jsonObject.put(p, "People", p['id'])
-        if x == 1:
-            successes += 1
-            #print("fn returned " + str(x))
+#     count = 0
+#     successes = 0
+#     for p in ps:
+#         count += 1
+#         print("Processing peep[" + str(count) + "] " + p['firstName'] + " " + p['familyName'])
 
-    print("Loaded " + str(successes) + " of " + str(count) + " objects")
+#         for k in p.keys():
+#             if p[k] == "":
+#                 p[k] = "<<NOT DEFINED>>"
+
+#         x = jsonObject.put(p, "People", p['id'])
+#         if x == 1:
+#             successes += 1
+#             #print("fn returned " + str(x))
+
+#     print("Loaded " + str(successes) + " of " + str(count) + " objects")
+#     return
+
+def backupObjects():
+    context = mycontext.newContext()
+    # set the handler to what we want.
+    mycontext.setObjectHandler(jsonObjectFile)
+    mycontext.setObjectHandler(jsonObjectDynamo)
+
+    peepList = peeps.getPeepsList(context)
+
+    ts = datetime.datetime.utcnow().isoformat()
+    fileName = "/temp/backups/PeepsBackup-" + ts + ".json"
+    fileName = fileName.replace(":", "-")
+
+    print("Backuping up to file - [" + fileName + "]")
+    with open(fileName, 'w') as json_file:
+        json.dump(peepList, json_file)
+    print("Saved " + str(len(peepList)) + " records.")
+    
     return
+
 
 def validateEntry(p, dictName):
     missing = ""
@@ -62,9 +87,13 @@ def asMuchAsWeKnow(peep):
     return ret
 
 def validateObjects():
-    context = None
-    context = mycontext.setPeepObjects(context)
-    peepList = mycontext.getPeeps(context)
+
+    context = mycontext.newContext()
+    # set the handler to what we want.
+    mycontext.setObjectHandler(jsonObjectFile)
+    mycontext.setObjectHandler(jsonObjectDynamo)
+
+    peepList = peeps.getPeepsList(context)
 
     for peep in peepList:
         #missing = validateEntry(peep, "id")
@@ -85,19 +114,24 @@ def main():
 
     parser = argparse.ArgumentParser(description='Peeps Utilities.')
     parser.add_argument('-v', '--validate', action='store_true', default='False', help='Validate the data held')
-    parser.add_argument('-u', '--upload',  action='store_true', default='False', help='Upload the magic file')    #ToDo allow file to be added as parm
+    #parser.add_argument('-u', '--upload',  action='store_true', default='False', help='Upload the magic file')    #ToDo allow file to be added as parm
     parser.add_argument('-d', '--download',  action='store_true', default='False', help='Download to the magic file')    #ToDo allow file to be added as parm
+    parser.add_argument('-b', '--backup',  action='store_true', default='False', help='Download to a backup file')   
 
     args = parser.parse_args()
     print(args)
     
-    if args.upload == True:
-        print("Uploading...")
-        fileToObjects()
+    # if args.upload == True:
+    #     print("Uploading...")
+    #     fileToObjects()
 
     if args.validate == True:
         print("Validating...")
         validateObjects()
+
+    if args.backup == True:
+        print("backup...")
+        backupObjects()
 
     if args.download == True:
         print("Download...")

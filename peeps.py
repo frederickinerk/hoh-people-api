@@ -10,160 +10,12 @@ import uuid
 
 import mycontext
 
-import jsonObject   # TODO REwork like MBS
+import jsonObjectDynamo   # TODO REwork like MBS
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.info('peep: initialisation starting...')
 
-###
-# File version of getting the PeepFile
-###
-
-def loadPeepFile(context, fileName):
-    with open(fileName) as json_file:
-        data = json.load(json_file)
-    
-    index = 0
-    for peep in data['peeps']:
-        peep['index'] = str(index)
-        index += 1
-    
-    context = mycontext.setPeeps(context, data['peeps'])
-    logger.info("peep->loadPeepFIle returned a list " + str(len(data['peeps'])))
-
-    return context
-
-###
-# isMatchedLevel
-# Passed a list of integers or the word "all"
-# If the level of the peep (currentLevel) of the peep is in the list to return, return True
-# Return True if the string is "All"
-# return False otherwise
-###
-
-def isMatchedLevel(targetLevel, currentLevel):
-
-    if targetLevel == "*":      # ALL
-        return True
-    
-    levelList = targetLevel.split(",")
-    for level in levelList:
-        if level == currentLevel:
-            return True
-        # IF the target is "-2", then that means any older will match
-        if level == "-2":
-            if int(currentLevel) <= -2:
-                return True  
-    return False
-
-###
-# getBirthdayList
-# Returns list of peeps who match the criteria
-# level - string containing level to match 
-# allPeeps - Inlcude quick and the dead
-###
-
-def getBirthdayList(context, level, daysUntil, daysSince, allPeeps):
-    logger.info("peep->getBirthdayList Entry - level - " + level + " daysUntil = " + daysUntil + " daysSince = " + daysSince + " allPeeps = " + allPeeps)
-
-    peepList = mycontext.getPeeps(context)
-
-    logger.info("peep->getBirthdayList - peepList has " +  str(len(peepList)) + " peeps in it")
-
-    list = []
-
-    today = mycontext.getToday(context)
-
-    logger.info("peep->getBirthdayList - today is  " +  str(today))
-
-    for peep in peepList:
-        logger.info("peep->getBirthdayList - processing peep " +  peep['firstName'])
-        if isMatchedLevel(level, peep['level']) == False:
-            # Only include if level in scope
-            logger.info("peep->getBirthdayList - peep not matched level")
-            continue
-        
-        logger.info("peep->getBirthdayList - peep '" + peep['firstName'] + "' is at the correct level")
-        # Only include living
-        if ('dod' in peep):
-            logger.debug("peep->getBirthdayList - peep " +  peep['firstName'] + " has dod" )
-            logger.debug("peep->getBirthdayList - all peeps is " + allPeeps.upper() )
-
-            if not((allPeeps.upper() == "TRUE") and validDate(peep, "dod")):
-                logger.debug("peep->getBirthdayList - peep skipped as not all peeps and valid date")
-                continue
-
-        if not validDate(peep, "dob"):
-            logger.debug("peep->getBirthdayList - peep skipped as no valid dob")
-            continue
-
-        # In theory a peep can be added twice (TODO NEED TO CHECK FOR 365 days)
-        dob = datetime.datetime.strptime(peep['dob'], "%Y-%m-%d")
-        logger.debug("peep->getBirthdayList - peep (" + peep['firstName'] + ") DOB is  " + str(dob))
-
-        # Check for past birthdays...
-        cbd = getClosestBirthday(today, dob, -1 * int(daysSince))
-        logger.debug("peep->getBirthdayList - peep " + peep['firstName'] + " closest birthday is  " + str(cbd))
-        if cbd is None:
-            logger.debug("peep->getBirthdayList - peep " + peep['firstName'] + " does not have a birthday in the past close enough")
-        else:
-            daysAway = (cbd - today).days
-            pastPeep = peep.copy() # Clone the peep
-            logger.debug("peep->getBirthdayList (in the past) - days away is  " + str(daysAway) )
-            pastPeep['daysAway'] = str(daysAway)
-            age = relativedelta(today, dob).years
-            pastPeep['age'] = str(age) 
-
-            addPeepToBirthdayList(list, pastPeep)
-
-        # Check for future birthdays...
-        cbd = getClosestBirthday(today, dob, int(daysUntil))
-        logger.debug("peep->getBirthdayList - peep " + peep['firstName'] + " closest birthday is  " + str(cbd))
-        if cbd is None:
-            logger.debug("peep->getBirthdayList - peep " + peep['firstName'] + " does not have a birthday in the future close enough")
-        else:
-            daysAway = (cbd - today).days
-            futurePeep = peep.copy() # Clone the peep
-            logger.debug("peep->getBirthdayList (in the future) - days away is  " + str(daysAway) )
-            futurePeep['daysAway'] = str(daysAway)
-            age = relativedelta(today, dob).years
-            if daysAway == 0:   
-                futurePeep['age'] = str(age) 
-            else:
-                futurePeep['age'] = str(age + 1) 
-            addPeepToBirthdayList(list, futurePeep)
-
-    logger.info("peep-> getBirthdayList Exit - returning " + str(len(list)) + " birthday events")
-
-    return list
-
-###
-# addPeepToBirthdayList
-# Insert the peep at the appropriate place in the list
-# 
-###
-
-def addPeepToBirthdayList(list, peep):
-    logger.debug("peep->addPeepToBirthdayList Entry for " + peep['firstName'] + " List has " + str(len(list)) + " items") 
-
-    if len(list) == 0:
-        list.append(peep)
-    else:
-        index = 0
-        inserted = False
-        for item in list:
-            if int(peep['daysAway']) < int(item['daysAway']):
-                list.insert(index, peep)
-                inserted = True
-                break
-            index += 1
-        if inserted == False:
-            list.append(peep)
-
-    logger.debug("peep->addPeepToBirthdayList Exit - list has  " + str(len(list)) + " items")
-
-    return
 
 ###
 # getPreferredName
@@ -188,100 +40,35 @@ def getPreferredName(peep, includeFN = False):
     return sName
 
 ###
-# getClosestBirthday
-# Returns a date for the closest birtday, either last year, this year or next year that is within the
-# range specified.
-# currentDate - Date type
-# dob - Date Type
-# rangeDays - integer - number of days into the future to filter (+ve) or in the past (-ve)
-###
-
-def getClosestBirthday(currentDate, dob, rangeDays):
-
-    thisYearsBD = datetime.date(currentDate.year, dob.month, dob.day)
-    lastYearsBD = datetime.date(currentDate.year - 1, dob.month, dob.day)
-    nextYearsBD = datetime.date(currentDate.year + 1, dob.month, dob.day)
-
-    diffLY = (lastYearsBD - currentDate).days
-    diffTY = (thisYearsBD - currentDate).days
-    diffNY = (nextYearsBD - currentDate).days
-
-    logger.debug("peep->getClosestBirthday Last Years = " + str(diffLY))
-    logger.debug("peep->getClosestBirthday This Years = " + str(diffTY))
-    logger.debug("peep->getClosestBirthday Next Years = " + str(diffNY))
-
-    if rangeDays < 0:
-        logger.debug("peep->getClosestBirthday Checking for birthdays past")
-        # looking for the previous birthday
-        if (diffTY < 0) and (abs(diffTY) < abs(rangeDays)):
-            # This years birthday is within range
-            logger.debug("peep->getClosestBirthday This Years birthday was within range")
-            return(thisYearsBD)
-
-        if (abs(diffLY) < abs(rangeDays)):
-            # Last years birthday is within range
-            return(lastYearsBD)
-    else:
-        logger.debug("peep->getClosestBirthday Checking for birthdays future (or today)")
-        # looking for the next birthday
-        if (diffTY >= 0) and (diffTY <= rangeDays):
-            logger.debug("peep->getClosestBirthday This Years birthday was within range (future)")
-            return(thisYearsBD)
-
-        if (diffNY <= rangeDays):
-            # Next years birthday is within range
-            return(nextYearsBD)
-    
-    logger.debug("peep->getClosestBirthday No birthdays within range")    
-    return None
-
-###
-# validDate
-# Check that the name dict item is a valid date
-# Use for DOB or DOD
-# Missing is considered invalid
-# Date must be of form yyyy-mm-dd
-###
-
-def validDate(peep, field):
-    if not field in peep:
-        return False
-    
-    if len(peep[field]) != 10:
-        return False
-    
-    # This will do for now...
-
-    return True
-
-###
 # getParentIndex
-# guid to use: either the father or mother
-# returns either the index or None if not found or not a guid
+# id to use: either the father or mother
+# returns either the index or None if not found or not a id
 ###
 
-def getParentIndex(context, peep, parentGuid):
-    if not parentGuid in peep:
-        logger.debug('peep->getParentIndex no guid for ' + parentGuid)
+def getParentIndex(context, peep, parentid):
+    if not parentid in peep:
+        logger.debug('peep->getParentIndex no id for ' + parentid)
         return ""
 
-    if len(peep[parentGuid]) != 36:
-        logger.debug('peep->getParentIndex guid not valid for ' + parentGuid)
+    if len(peep[parentid]) != 36:
+        logger.debug('peep->getParentIndex id not valid for ' + parentid)
         return ""
 
-    peepList = mycontext.getPeeps(context)
+    objHandler = mycontext.getObjectHandler()
+    peepList = objHandler.getList("People")
+    #peepList = mycontext.getPeeps(context)
     for lookupPeep in peepList:
-        if lookupPeep['id'] == peep[parentGuid]:
-            logger.debug('peep->getParentIndex FOUND parent ' + parentGuid + " its " + lookupPeep['firstName'] + " with id = " + lookupPeep['index'] + ' for ' + peep['firstName'])
-            return lookupPeep['index']
+        if lookupPeep['id'] == peep[parentid]:
+            logger.debug('peep->getParentIndex FOUND parent ' + parentid + " its " + lookupPeep['firstName'] + " with id = " + lookupPeep['id'] + ' for ' + peep['firstName'])
+            return lookupPeep['id']
 
-    logger.debug('peep->getParentIndex did not find Parent ' + parentGuid + " for peep " + lookupPeep['firstName'])
+    logger.debug('peep->getParentIndex did not find Parent ' + parentid + " for peep " + lookupPeep['firstName'])
     return ""
 
-def fieldOrDefault(peep, fieldName):
+def fieldOrDefault(peep, fieldName, default=""):
     if fieldName in peep:
         return peep[fieldName]
-    return ""
+    return default
 
 ###
 # produceCSVList
@@ -291,15 +78,17 @@ def fieldOrDefault(peep, fieldName):
 def produceCSVList(context):
     logger.info("peep->produceCSVList Entry" )
 
-    peepList = mycontext.getPeeps(context)
+    objHandler = mycontext.getObjectHandler()
+    peepList = objHandler.getList("People")
+    #peepList = mycontext.getPeeps(context)
 
-    logger.info("peep->getBirthdayList - peepList has " +  str(len(peepList)) + " peeps in it")
+    logger.info("peep->produceCSVList - peepList has " +  str(len(peepList)) + " peeps in it")
 
     list = []
     for peep in peepList:
         row = {}
 
-        row['index'] = peep['index']
+        row['index'] = fieldOrDefault(peep, 'index', "0")
         row['id'] = fieldOrDefault(peep, 'id')
         row['level'] = fieldOrDefault(peep, 'level')
         row['firstName'] = fieldOrDefault(peep, 'firstName')
@@ -308,8 +97,8 @@ def produceCSVList(context):
         row['dob'] = fieldOrDefault(peep, 'dob')
         row['dod'] = fieldOrDefault(peep, 'dod')
         row['maidenName'] = fieldOrDefault(peep, 'maidenName')
-        row['fatherIndex'] = getParentIndex(context, peep, 'fatherGuid')
-        row['motherIndex'] = getParentIndex(context, peep, 'motherGuid')
+        row['fatherIndex'] = getParentIndex(context, peep, 'fatherid')
+        row['motherIndex'] = getParentIndex(context, peep, 'motherid')
              
         list.append(row)
 
@@ -323,44 +112,44 @@ def produceCSVList(context):
 # returns an array of strings
 ###
 
-def produceDecendentList(context, guid):
+def produceDecendentList(context, id):
 
     decendentLines = []
 
     logger.info("peep->produceDecendentList Entry" )
-    peepList = mycontext.getPeeps(context)
+    #peepList = mycontext.getPeeps(context)
+    objHandler = mycontext.getObjectHandler()
+    peepList = objHandler.getList("People")
+
     logger.info("peep->produceDecendentList - peepList has " +  str(len(peepList)) + " peeps in it")
 
     # first dump the top level parent (find them first)
     line = ""
     for peep in peepList:
-        if peep['id'] == guid:
+        if peep['id'] == id:
             line = peep['firstName']
             break
     decendentLines.append(line)
 
-    lines = processDecendentNode(peepList, guid, 1)
+    lines = processDecendentNode(peepList, id, 1)
     decendentLines += lines
 
     logger.info("peep->produceDecendentList Exit" )
 
     return decendentLines
 
-
-
-
 ###
 # GetRelString
-# guidTag of peep to lookup
+# idTag of peep to lookup
 # returns a string
 ###
 
-def GetRelString(peepList, peep, relName, guidTag):
+def GetRelString(peepList, peep, relName, idTag):
 
     relString = ""
-    if guidTag in peep:
+    if idTag in peep:
         for relPeep in peepList:
-            if peep[guidTag] == relPeep['id']:
+            if peep[idTag] == relPeep['id']:
                 relString = relName + " " + getPreferredName(relPeep, True) + ";"
                 break
             #relPeep = findPeep(p)
@@ -375,9 +164,9 @@ def GetRelString(peepList, peep, relName, guidTag):
 
 def processOtherRels(peepList, peep):
 
-    retString = GetRelString(peepList, peep, 'father', 'fatherGuid')
-    retString += " " + GetRelString(peepList, peep, 'mother', 'motherGuid')
-    retString += " " + GetRelString(peepList, peep, 'stepfather', 'stepFatherGuid')
+    retString = GetRelString(peepList, peep, 'father', 'fatherid')
+    retString += " " + GetRelString(peepList, peep, 'mother', 'motherid')
+    retString += " " + GetRelString(peepList, peep, 'stepfather', 'stepFatherid')
 
     return retString
 
@@ -417,14 +206,14 @@ def processPartnerDetails(peep):
 # returns an array of strings
 ###
 
-def processParentNode(peepList, peep, guid, parentGuidTag, indentLevel):
+def processParentNode(peepList, peep, id, parentidTag, indentLevel):
     indentString = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"
     nodeLines = []
 
-    if not parentGuidTag in peep:
+    if not parentidTag in peep:
         return None
 
-    if peep[parentGuidTag] == guid:
+    if peep[parentidTag] == id:
         # Decendent
         line = indentString[0:indentLevel] + getPreferredName(peep, True) + " (" + processOtherRels(peepList, peep)  + ")" 
         nodeLines.append(line)
@@ -442,25 +231,71 @@ def processParentNode(peepList, peep, guid, parentGuidTag, indentLevel):
 
     return None
 
-def processDecendentNode(peepList, guid, indentLevel):
+def processDecendentNode(peepList, id, indentLevel):
 
     logger.info("peep->processDecendentNode Entry - level " + str(indentLevel) )
     nodeLines = []
 
     for peep in peepList:
         # Test for Mother
-        moreLines = processParentNode(peepList, peep, guid, 'motherGuid', indentLevel)
+        moreLines = processParentNode(peepList, peep, id, 'motherid', indentLevel)
         if moreLines != None:
             nodeLines += moreLines
 
         # Test for Father
-        moreLines = processParentNode(peepList, peep, guid, 'fatherGuid', indentLevel)
+        moreLines = processParentNode(peepList, peep, id, 'fatherid', indentLevel)
         if moreLines != None:
             nodeLines += moreLines
 
     logger.info("peep->processDecendentNode Exit (" + str(len(nodeLines)) + ")" )
 
     return nodeLines
+
+#########################################################################################################
+#########################################################################################################
+
+###
+# compareIfExists
+# Check the dict item has a value of name and then test if it is the same as value.
+# Only return true if present and matches
+###
+
+def compareIfExists(item, name, value):
+    ret = False
+    if name in item:
+        if item[name] == value:
+            ret = True
+    return ret
+
+###
+# getPeep
+# Return a list of one peep that matches ID  specfied
+###
+
+def getPeep(context, id):
+
+    objHandler = mycontext.getObjectHandler()
+    aPeep = objHandler.get("People", id)
+    #peepList = mycontext.getPeeps(context)
+
+    logger.info("peep->getPeeps - aPeep is " + str(aPeep))
+
+    if not aPeep is None: 
+        theList = []
+        theList.append(aPeep)
+
+    logger.info("peep->getPeep - returned list has " +  str(len(theList)) + " peeps in it (one expected)")
+
+    return theList
+
+
+###
+# peepSort
+# Sort by familyName and firstName
+###
+
+def peepSort(dict):
+    return dict['familyName'] + "." + dict['firstName']
 
 ###
 # getPeepsList
@@ -469,27 +304,36 @@ def processDecendentNode(peepList, guid, indentLevel):
 # returns a List of peeps
 ###
 
-def getPeepsList(context, id):
+def getPeepsList(context, familyName="", birthSex=""):
 
-    peepList = mycontext.getPeeps(context)
+    objHandler = mycontext.getObjectHandler()
+    peepList = objHandler.getList("People")
+    #peepList = mycontext.getPeeps(context)
 
     logger.info("peep->getPeepsList - peepList has " +  str(len(peepList)) + " peeps in it")
-
+    logger.info("peep->getPeepsList - familyName = " + familyName + " sex = " + birthSex)
     theList = []
     for peep in peepList:
         # Check for the id first 
-        if 'id' not in peep:
-            continue    # This is bad and should not happen
 
-        if peep['id'] == id:
-            # we have the peep
+        if familyName != "":
+            #logger.info("peep->getPeepsList - trying to match familyName = " + familyName + " with peep familyname = " + peep['familyName'])
+            if compareIfExists(peep, 'familyName', familyName) or compareIfExists(peep, 'maidenName', familyName):
+                if birthSex != "":
+                    if peep['birthCertificateSex'] == birthSex:
+                        theList.append(peep)
+                        continue
+                else:   # I.e. FamilyName specfied but not sex. only match of family name in this case.
+                    theList.append(peep)
+                continue
+        else:
+            #TODO match on sex only if needed
+            #logger.info("Appending the fallthrough")
             theList.append(peep)
-            break   # one and only 1 peep
 
-        if id != "":    # TODO this is not required??
-            continue    # Dont build list if id is specified
-
-        theList.append(peep)
+    # Sort the key by family name
+    if len(theList) > 1:
+        theList.sort(key=peepSort)
 
     logger.info("peep->getPeepsList - returned list has " +  str(len(theList)) + " peeps in it")
 
@@ -504,6 +348,8 @@ def getPeepsList(context, id):
 def putPeep(context, peep):
     logger.info("peep->putPeep entry")
 
+    # List of fields that can be in a peep
+    stdPeep =  ["id", "firstName", "familyName", "otherNames", "maidenName", "level", "motherid", "fatherid", "stepFatherid", "stepMotherid", "dob", "dod", "birthCertificateSex", "version", "notes"]
     result = None
 
     id = None
@@ -514,21 +360,45 @@ def putPeep(context, peep):
         else:
             # TODO Check for stale copy
             logger.info("peep->putPeep check for updated blah blah")
-    
+  
     if id is None:
         id = str(uuid.uuid4())              # Set the ID
-        peep['version'] = "0"               # Assume it's the first
-    peep['id'] = id
+        logger.info("peep->putPeep - NEW PEEP - Id assigned = " + id)
+        ver = 0
+        targetPeep = {} 
+    else:
+        # Get the current record
+        logger.info("peep->putPeep - EXITING PEEP - Id = " + id)
+        targetPeep = getPeep(context, id)[0]
+        ver = 0
+        if 'version' in targetPeep:
+            ver =  int(targetPeep['version'])
+        ver += 1
 
-    logger.info("peep->putPeep - Id assigned = " + id)
+    targetPeep['id'] = id
+    targetPeep['version'] = str(ver)               # Assume it's the first
+
+    for fld in stdPeep:
+        if fld in peep:
+            if (peep[fld] != "Recorded") and (peep[fld] != "Not Recorded") and (peep[fld] != ""): 
+                targetPeep[fld] = peep[fld]
+    if 'familyName' not in targetPeep:
+            targetPeep['familyName'] = "<<NOT DEFINED>>"
+    if 'level' not in targetPeep:
+            targetPeep['level'] = "3"       # Most likely a baby? ToDo. Maybe can look up parents...
+    if 'birthCertificateSex' not in targetPeep:
+            targetPeep['birthCertificateSex'] = "<<NOT DEFINED>>"
+    if 'birthSex' in peep:
+        targetPeep['birthCertificateSex'] = peep['birthSex']
+
+    objHandler = mycontext.getObjectHandler()
+    x = objHandler.put(targetPeep, "People", id)
     
-    x = jsonObject.put(peep, "People", id)
     if x == 1:
         #print("fn returned " + str(x))
         result = {'result': 'Success', 'id': id}
     else:
         result = {'result': 'Failed'}
-
 
     logger.info("peep->putPeep exit")
 
