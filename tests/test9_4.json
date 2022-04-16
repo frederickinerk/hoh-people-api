@@ -1,6 +1,6 @@
 {
     "resource": "/{proxy+}",
-    "path": "/peoples/74adb506-1841-478c-a8b9-bcf330230a2f",
+    "path": "/todaysBirthdays",
     "httpMethod": "GET",
     "headers": {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -51,7 +51,7 @@
         ]
     },
     "queryStringParameters": {
-        "idx": "74adb506-1841-478c-a8b9-bcf330230a2f"
+        "date": "2022-04-29T09:32:23.378Z"
     },
     "multiValueQueryStringParameters": {
     },

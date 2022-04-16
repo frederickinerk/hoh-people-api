@@ -1,7 +1,7 @@
 {
     "resource": "/{proxy+}",
     "path": "/peoples/74adb506-1841-478c-a8b9-bcf330230a2f",
-    "httpMethod": "GET",
+    "httpMethod": "POST",
     "headers": {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "accept-encoding": "gzip, deflate, br",
@@ -86,6 +86,6 @@
         },
         "apiId": "qa5qokhw54"
     },
-    "body": null,
+    "body": "{\"firstName\": \"Basil\" }",
     "isBase64Encoded": false
 }
