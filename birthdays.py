@@ -292,7 +292,7 @@ def getTodaysBirthdays(context):
     list = getBirthdayList(context, "", "0", "0", "False")
 
     if len(list) == 0:
-        retString = "None today"
+        retString = "None"
     else:
         retString = ""
         index = 0
